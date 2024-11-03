@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제주 여행 날씨알리미 시스템</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>제주 여행 날씨알리미 시스템</h1>
+    <form method="post">
+        <label for="target_temperature">여행을 갈 때 원하는 기온을 입력하세요 (°C):</label>
+        <input type="number" step="0.1" name="target_temperature" id="target_temperature" required>
+        
+        <p>특정 지역을 선택하시겠습니까?</p>
+        <label><input type="radio" name="use_specific_region" value="yes"> 예</label>
+        <label><input type="radio" name="use_specific_region" value="no" checked> 아니요</label>
+        
+        <div id="region-select" style="display: none;">
+            <label for="selected_region">여행을 갈 지역을 선택하세요:</label>
+            <select name="selected_region" id="selected_region">
+                {% for region in regions %}
+                    <option value="{{ region }}">{{ region }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit">추천 결과 보기</button>
+    </form>
+
+    <hr>
+
+    {% if target_temperature is not none %}
+        {% if selected_region %}
+            <h2>{{ selected_region }} 지역에서 기준 기온 ±2도 내에 해당하는 월:</h2>
+            {% if matched_months %}
+                <ul>
+                    {% for month, avg_temp in matched_months %}
+                        <li>{{ month }}월 - 평균 기온: {{ avg_temp|round(2) }}°C</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>{{ selected_region }} 지역에서 기준 기온에 맞는 월이 없습니다.</p>
+            {% endif %}
+        {% else %}
+            <h2>기준 기온 ±2도 내에 해당하는 모든 지역의 월:</h2>
+            {% if matched_months %}
+                {% for observatoryName, month, avg_temp in matched_months %}
+                    <h3>{{ observatoryName }}:</h3>
+                    <ul>
+                        <li>{{ month }}월 - 평균 기온: {{ avg_temp|round(2) }}°C</li>
+                    </ul>
+                {% endfor %}
+            {% else %}
+                <p>기준 기온에서 ±2도 내에 해당하는 지역이 없습니다.</p>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    <script>
+        document.querySelectorAll('input[name="use_specific_region"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const regionSelect = document.getElementById('region-select');
+                if (this.value === 'yes') {
+                    regionSelect.style.display = 'block';
+                } else {
+                    regionSelect.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
